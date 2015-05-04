@@ -1,0 +1,24 @@
+#!/usr/bin/expect -f
+
+if { $argc == 0 } {
+    puts "Missing the hosts to copy ssh keys to."
+    puts "Ex: $argv0 host1 host2 host3"
+    exit 1
+}
+
+# grab the password
+stty -echo
+send_user -- "Enter the common password: "
+expect_user -re "(.*)\n"
+send_user "\n"
+stty echo
+set pass $expect_out(1,string)
+
+foreach arg $argv {
+    spawn ssh-copy-id -i $env(HOME)/.ssh/id_rsa.pub $arg\n
+    expect {
+        "connecting (yes/no)?" {send "yes\n"; exp_continue}
+        "password:" {send "$pass\n"; exp_continue}
+        eof {}
+    }
+}
